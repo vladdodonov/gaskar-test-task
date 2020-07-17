@@ -29,8 +29,10 @@ public class SpeakerServiceImpl implements SpeakerService {
     @Override
     public Speaker save(SpeakerDto speakerDto) {
         Speaker speaker = modelMapper.map(speakerDto, Speaker.class);
-        speaker.setId(UUID.randomUUID());
-        return speakerRepo.save(speaker);
+        speaker =  speakerRepo.save(speaker);
+        Speaker fromDb = findFullById(speaker.getId());
+        fromDb.getReports().forEach(report -> report.setSpeaker(fromDb));
+        return speakerRepo.save(fromDb);
     }
 
     @Transactional
@@ -38,7 +40,8 @@ public class SpeakerServiceImpl implements SpeakerService {
     public Speaker update(UUID id, SpeakerDto speakerDto) {
         Speaker fromDb = speakerRepo.findFullById(id).orElseThrow(() -> new EntityNotFoundException(id.toString()));
         modelMapper.map(speakerDto, fromDb);
-        return speakerRepo.save(fromDb);
+        speakerRepo.save(fromDb);
+        return findFullById(id);
     }
 
     @Override
@@ -57,6 +60,8 @@ public class SpeakerServiceImpl implements SpeakerService {
     @Transactional
     @Override
     public void deleteById(UUID id) {
+        Speaker speaker = findFullById(id);
+        speaker.getReports().forEach(report -> report.setSpeaker(null));
         speakerRepo.deleteById(id);
     }
 }

@@ -30,7 +30,6 @@ public class ReportServiceImpl implements ReportService {
     @Override
     public Report save(ReportDto reportDto) {
         Report report = modelMapper.map(reportDto, Report.class);
-        report.setId(UUID.randomUUID());
         return reportRepo.save(report);
     }
 
@@ -58,7 +57,8 @@ public class ReportServiceImpl implements ReportService {
     @Transactional
     @Override
     public void deleteById(UUID id) {
-        Report fromDb = reportRepo.findFullById(id).orElseThrow(() -> new EntityNotFoundException(id.toString()));
+        Report fromDb = findFullById(id);
+        fromDb.setSpeaker(null);
         reportRepo.deleteById(id);
     }
 }

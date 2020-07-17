@@ -8,12 +8,16 @@ import org.modelmapper.Condition;
 import org.modelmapper.Converter;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.PropertyMap;
+import org.modelmapper.spi.MappingContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 @Configuration
 public class ModelMapperConfig {
@@ -21,26 +25,26 @@ public class ModelMapperConfig {
     public ModelMapper getModelMapper() {
         ModelMapper modelMapper = new ModelMapper();
 
-        Converter<List<ReportDto>, List<Report>> dtosToReportsConverter = mappingContext -> {
+        Converter<List<ReportDto>, Set<Report>> dtosToReportsConverter = mappingContext -> {
             List<ReportDto> dtos = mappingContext.getSource();
-            List<Report> reports = null;
+            Set<Report> reports = null;
             if (mappingContext.getSource() != null && !mappingContext.getSource().isEmpty()) {
-                reports = new ArrayList<>();
+                reports = new HashSet<>();
                 for (ReportDto dto : dtos) {
                     Report report = modelMapper.map(dto, Report.class);
                     reports.add(report);
                 }
             }
             if (reports == null || reports.isEmpty()) {
-                return Collections.emptyList();
+                return Collections.emptySet();
             } else {
                 return reports;
             }
         };
 
-        Converter<List<Report>, List<ReportDto>> reportToDtosConverter = mappingContext -> {
+        Converter<Set<Report>, List<ReportDto>> reportToDtosConverter = mappingContext -> {
             List<ReportDto> dtos = null;
-            List<Report> reports = mappingContext.getSource();
+            Set<Report> reports = mappingContext.getSource();
             if (mappingContext.getSource() != null && !mappingContext.getSource().isEmpty()) {
                 dtos = new ArrayList<>();
                 for (Report report : reports) {
@@ -52,6 +56,19 @@ public class ModelMapperConfig {
                 return Collections.emptyList();
             } else {
                 return dtos;
+            }
+        };
+
+        Converter<UUID, Speaker> speakerConverter = new Converter<UUID, Speaker>() {
+            @Override
+            public Speaker convert(MappingContext<UUID, Speaker> mappingContext) {
+                if (mappingContext.getSource() != null) {
+                    Speaker speaker = new Speaker();
+                    speaker.setId(mappingContext.getSource());
+                    return speaker;
+                } else{
+                    return null;
+                }
             }
         };
 
@@ -76,6 +93,7 @@ public class ModelMapperConfig {
             @Override
             protected void configure() {
                 when(isFieldNull).skip(source.getId(), destination.getId());
+                using(speakerConverter).map(source.getSpeakerId()).setSpeaker(null);
             }
         };
 
