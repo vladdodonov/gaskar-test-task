@@ -8,7 +8,6 @@ import org.modelmapper.Condition;
 import org.modelmapper.Converter;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.PropertyMap;
-import org.modelmapper.spi.MappingContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -59,16 +58,13 @@ public class ModelMapperConfig {
             }
         };
 
-        Converter<UUID, Speaker> speakerConverter = new Converter<UUID, Speaker>() {
-            @Override
-            public Speaker convert(MappingContext<UUID, Speaker> mappingContext) {
-                if (mappingContext.getSource() != null) {
-                    Speaker speaker = new Speaker();
-                    speaker.setId(mappingContext.getSource());
-                    return speaker;
-                } else{
-                    return null;
-                }
+        Converter<UUID, Speaker> speakerConverter = mappingContext -> {
+            if (mappingContext.getSource() != null) {
+                Speaker speaker = new Speaker();
+                speaker.setId(mappingContext.getSource());
+                return speaker;
+            } else {
+                return null;
             }
         };
 
